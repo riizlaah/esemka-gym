@@ -2,6 +2,7 @@ package nr.dev.bruv
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
@@ -54,7 +55,7 @@ class MainActivity : ComponentActivity() {
                     if(isLogin && !isRegister) {
                         LoginScreen(Modifier.padding(innerPadding), {isLogin = false;isRegister = false}, {isRegister = true; isLogin = false})
                     } else if(!isLogin && !isRegister) {
-                        HomeScreen(Modifier.padding(innerPadding))
+                        HomeScreen(Modifier.padding(innerPadding), { finish() })
                     } else {
                         RegisterScreen(Modifier.padding(innerPadding), onLogin = {isLogin = true;isRegister = false})
                     }
@@ -159,7 +160,10 @@ fun RegisterScreen(modifier: Modifier, onLogin: () -> Unit) {
 }
 
 @Composable
-fun HomeScreen(modifier: Modifier) {
+fun HomeScreen(modifier: Modifier, onBack: () -> Unit) {
+    BackHandler(enabled = true) {
+        onBack()
+    }
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text("Home")
     }
