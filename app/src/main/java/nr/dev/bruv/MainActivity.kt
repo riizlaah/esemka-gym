@@ -292,9 +292,9 @@ fun PasswordField(state: TextFieldState) {
                 }
                 Icon(
                     if (showPassword) {
-                        painterResource(R.drawable.baseline_visibility_24)
+                        painterResource(R.drawable.icon_visibility_24)
                     } else {
-                        painterResource(R.drawable.outline_visibility_off_24)
+                        painterResource(R.drawable.icon_visibility_off_24)
                     },
                     contentDescription = "Toggle Password Visibility",
                     modifier = Modifier
