@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,8 +16,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicSecureTextField
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.TextObfuscationMode
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -37,7 +44,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
@@ -68,7 +74,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LoginScreen(modifier: Modifier, onLogin: () -> Unit, onRegist: () -> Unit) {
     var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val passwordState = remember { TextFieldState() }
     Column(modifier.fillMaxSize().padding(36.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Image(painter = painterResource(id = R.drawable.esemka), contentDescription = "Esemka Gym Logo",
             modifier = Modifier.padding(horizontal = 30.dp).fillMaxWidth())
@@ -85,12 +91,7 @@ fun LoginScreen(modifier: Modifier, onLogin: () -> Unit, onRegist: () -> Unit) {
         }
         Column {
             BoldOrangeText("Password")
-            TextField(
-                modifier = Modifier.fillMaxWidth().borderBottom(),
-                value = password, onValueChange = {str: String -> password = str},
-                placeholder = {Text("Password")},
-                colors = resetTextField()
-            )
+            PasswordField(passwordState)
         }
         Button(
             onClick = onLogin,
@@ -102,7 +103,7 @@ fun LoginScreen(modifier: Modifier, onLogin: () -> Unit, onRegist: () -> Unit) {
         CenterCol {
             Text("or", fontWeight = FontWeight.Bold, color = Color.Gray)
             TextButton(onClick = onRegist, contentPadding = PaddingValues(0.dp)) {
-                Text("Sign Up", fontWeight = FontWeight.Bold)
+                Text("Sign Up", fontSize = 2.5.em, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -111,7 +112,7 @@ fun LoginScreen(modifier: Modifier, onLogin: () -> Unit, onRegist: () -> Unit) {
 @Composable
 fun RegisterScreen(modifier: Modifier, onLogin: () -> Unit) {
     var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val passwordState = remember { TextFieldState() }
     var isMale by remember { mutableStateOf(true) }
     Column(modifier.fillMaxSize().padding(38.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Sign Up", fontSize = 4.em, fontWeight = FontWeight.Bold)
@@ -126,11 +127,7 @@ fun RegisterScreen(modifier: Modifier, onLogin: () -> Unit) {
         }
         Column {
             BoldOrangeText("Password")
-            TextField(
-                modifier = Modifier.fillMaxWidth().background(Color.Transparent).borderBottom(), value = password,
-                onValueChange = {str: String -> password = str},
-                colors = resetTextField()
-            )
+            PasswordField(passwordState)
         }
         BoldOrangeText("Gender")
         Column {
@@ -181,6 +178,44 @@ fun CenterRow(arrangement: Arrangement.Horizontal = Arrangement.Center, function
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = arrangement) {
         function()
     }
+}
+
+@Composable
+fun PasswordField(state: TextFieldState) {
+    var showPassword by remember { mutableStateOf(false) }
+    BasicSecureTextField(
+        state = state,
+        textObfuscationMode = if(showPassword) {
+            TextObfuscationMode.Visible
+        } else {
+            TextObfuscationMode.RevealLastTyped
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .borderBottom(),
+        decorator = { innerTextField ->
+            Box(Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier.align(Alignment.CenterStart)
+                        .padding(start = 8.dp, end = 8.dp)
+                ) {
+                    innerTextField()
+                }
+                Icon(
+                    if(showPassword) {
+                        painterResource(R.drawable.baseline_visibility_24)
+                    } else {
+                        painterResource(R.drawable.outline_visibility_off_24)
+                    },
+                    contentDescription = "Toggle Password Visibility",
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .requiredSize(36.dp).padding(8.dp)
+                        .clickable(enabled = true, onClick = {showPassword = !showPassword})
+                )
+            }
+        }
+    )
 }
 
 @Composable
