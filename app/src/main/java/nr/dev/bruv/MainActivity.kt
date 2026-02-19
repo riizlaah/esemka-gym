@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,8 +26,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import nr.dev.bruv.ui.theme.BruvTheme
 
 class MainActivity : ComponentActivity() {
@@ -54,8 +62,11 @@ class MainActivity : ComponentActivity() {
 fun LoginScreen(modifier: Modifier, onLogin: () -> Unit, onRegist: () -> Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    Column(modifier.fillMaxSize().padding(16.dp)) {
-        Text("Sign In")
+    Column(modifier.fillMaxSize().padding(36.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Image(painter = painterResource(id = R.drawable.esemka), contentDescription = "Esemka Gym Logo",
+            modifier = Modifier.padding(horizontal = 30.dp).fillMaxWidth())
+        Text("Sign In", fontSize = 4.em, fontWeight = FontWeight.Bold)
+        Text("Hi there! Build your muscle with us!", color = Color.Gray)
         OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = username, onValueChange = {str: String -> username = str}, label = {Text("Username")})
         OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = password, onValueChange = {str: String -> password = str}, label = {Text("Password")})
         Button(
@@ -63,11 +74,13 @@ fun LoginScreen(modifier: Modifier, onLogin: () -> Unit, onRegist: () -> Unit) {
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Sign In")
+            Text("Sign In", fontWeight = FontWeight.Bold)
         }
-        Text("Or")
-        TextButton(onClick = onRegist) {
-            Text("Sign Up")
+        CenterCol {
+            Text("or", fontWeight = FontWeight.Bold, color = Color.Gray)
+            TextButton(onClick = onRegist) {
+                Text("Sign Up", fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -77,30 +90,33 @@ fun RegisterScreen(modifier: Modifier, onLogin: () -> Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isMale by remember { mutableStateOf(true) }
-    Column(modifier.fillMaxSize().padding(16.dp)) {
-        Text("Sign Up")
+    Column(modifier.fillMaxSize().padding(38.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Sign Up", fontSize = 4.em, fontWeight = FontWeight.Bold)
+        Text("Hi there! Register your gym member!", color = Color.Gray)
         OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = username, onValueChange = {str: String -> username = str}, label = {Text("Username")})
         OutlinedTextField(modifier = Modifier.fillMaxWidth(), value = password, onValueChange = {str: String -> password = str}, label = {Text("Password")})
         Text("Gender")
-        Row {
-            RadioButton(isMale, onClick = {isMale = true})
-            Text("Male")
-        }
-        Row {
-            RadioButton(!isMale, onClick = {isMale = false})
-            Text("Female")
+        Column {
+            CenterRow(Arrangement.Start) {
+                RadioButton(isMale, onClick = {isMale = true})
+                Text("Male")
+            }
+            CenterRow(Arrangement.Start) {
+                RadioButton(!isMale, onClick = {isMale = false})
+                Text("Female")
+            }
         }
         Button(
             onClick = onLogin,
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Sign Up")
+            Text("Sign Up", fontWeight = FontWeight.Bold)
         }
-        Row {
-            Text("Or")
-            TextButton(onClick = onLogin) {
-                Text("Sign In")
+        CenterRow {
+            Text("Have an Account?", fontWeight = FontWeight.Bold, color = Color.Gray)
+            TextButton(onClick = onLogin, modifier = Modifier.padding()) {
+                Text("Sign In", fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -112,3 +128,23 @@ fun HomeScreen(modifier: Modifier) {
         Text("Home")
     }
 }
+
+@Composable
+fun CenterCol(function: @Composable () -> Unit) {
+    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        function()
+    }
+}
+
+@Composable
+fun CenterRow(arrangement: Arrangement.Horizontal = Arrangement.Center, function: @Composable () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = arrangement) {
+        function()
+    }
+}
+
+//fun Modifier.borderBottom(color: Color = Color.Gray, strokeWidth: Dp = 2.dp): Modifier =
+//    this.drawBehind {
+//        val y = size.height - strokeWidth.toPx() / 2
+//
+//    }
