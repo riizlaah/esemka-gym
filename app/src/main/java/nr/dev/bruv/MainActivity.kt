@@ -6,36 +6,37 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicSecureTextField
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.TextObfuscationMode
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,23 +48,40 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import nr.dev.bruv.ui.theme.BruvTheme
 
+
 class MainActivity : ComponentActivity() {
+    lateinit var navCtrl: NavHostController
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             BruvTheme {
-                var isLogin by remember { mutableStateOf(true) }
-                var isRegister by remember { mutableStateOf(false) }
+                navCtrl = rememberNavController()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    if(isLogin && !isRegister) {
-                        LoginScreen(Modifier.padding(innerPadding), {isLogin = false;isRegister = false}, {isRegister = true; isLogin = false})
-                    } else if(!isLogin && !isRegister) {
-                        HomeScreen(Modifier.padding(innerPadding), { finish() })
-                    } else {
-                        RegisterScreen(Modifier.padding(innerPadding), onLogin = {isLogin = true;isRegister = false})
+                    val modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                    NavHost(
+                        navCtrl,
+                        startDestination = Screen.Login.route
+                    ) {
+                        composable(Screen.Login.route) {
+                            LoginScreen(modifier, navCtrl)
+                        }
+                        composable(Screen.SignUp.route) {
+                            SignUpScreen(modifier, navCtrl)
+                        }
+                        composable(Screen.Home.route) {
+                            HomeScreen(modifier, {finish()})
+                        }
                     }
                 }
             }
@@ -72,21 +90,36 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginScreen(modifier: Modifier, onLogin: () -> Unit, onRegist: () -> Unit) {
+fun LoginScreen(modifier: Modifier, controller: NavHostController) {
     var email by remember { mutableStateOf("") }
     val passwordState = remember { TextFieldState() }
-    Column(modifier.fillMaxSize().padding(36.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Image(painter = painterResource(id = R.drawable.esemka), contentDescription = "Esemka Gym Logo",
-            modifier = Modifier.padding(horizontal = 30.dp).fillMaxWidth())
+    var loading by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    Column(
+        modifier
+            .fillMaxSize()
+            .padding(36.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.esemka),
+            contentDescription = "Esemka Gym Logo",
+            modifier = Modifier
+                .padding(horizontal = 30.dp)
+                .fillMaxWidth()
+        )
         Text("Sign In", fontSize = 4.em, fontWeight = FontWeight.Bold)
         Text("Hi there! Build your muscle with us!", color = Color.Gray)
         Column {
             BoldOrangeText("Email")
-            TextField(
-                modifier = Modifier.fillMaxWidth().borderBottom(),
-                value = email, onValueChange = {str: String -> email = str},
-                placeholder = {Text("Email")},
-                colors = resetTextField()
+            BasicTextField(
+                value = email,
+                onValueChange = { email = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .borderBottom()
+                    .padding(start = 8.dp, top = 12.dp, end = 8.dp, bottom = 8.dp),
+                singleLine = true
             )
         }
         Column {
@@ -94,15 +127,36 @@ fun LoginScreen(modifier: Modifier, onLogin: () -> Unit, onRegist: () -> Unit) {
             PasswordField(passwordState)
         }
         Button(
-            onClick = onLogin,
+            onClick = {
+                scope.launch {
+                    loading = true
+                    delay(1000)
+                    loading = false
+                    controller.navigate(Screen.Home.route)
+                }
+            },
+            enabled = !loading,
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth(),
         ) {
+            if (loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    color = Color.White
+                )
+                Spacer(Modifier.width(8.dp))
+            }
             Text("Sign In", fontWeight = FontWeight.Bold)
         }
-        CenterCol {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text("or", fontWeight = FontWeight.Bold, color = Color.Gray)
-            TextButton(onClick = onRegist, contentPadding = PaddingValues(0.dp)) {
+            TextButton(
+                onClick = { controller.navigate(Screen.SignUp.route) },
+                contentPadding = PaddingValues(0.dp)
+            ) {
                 Text("Sign Up", fontSize = 2.5.em, fontWeight = FontWeight.Bold)
             }
         }
@@ -110,19 +164,30 @@ fun LoginScreen(modifier: Modifier, onLogin: () -> Unit, onRegist: () -> Unit) {
 }
 
 @Composable
-fun RegisterScreen(modifier: Modifier, onLogin: () -> Unit) {
+fun SignUpScreen(modifier: Modifier, controller: NavHostController) {
     var email by remember { mutableStateOf("") }
     val passwordState = remember { TextFieldState() }
     var isMale by remember { mutableStateOf(true) }
-    Column(modifier.fillMaxSize().padding(38.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    var loading by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    Column(
+        modifier
+            .fillMaxSize()
+            .padding(38.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         Text("Sign Up", fontSize = 4.em, fontWeight = FontWeight.Bold)
         Text("Hi there! Register your gym member!", color = Color.Gray)
         Column {
             BoldOrangeText("Email")
-            TextField(
-                modifier = Modifier.fillMaxWidth().borderBottom(), value = email,
-                onValueChange = {str: String -> email = str}, placeholder = {Text("Password")},
-                colors = resetTextField()
+            BasicTextField(
+                value = email,
+                onValueChange = { email = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .borderBottom()
+                    .padding(start = 8.dp, top = 12.dp, end = 8.dp, bottom = 8.dp),
+                singleLine = true
             )
         }
         Column {
@@ -132,24 +197,42 @@ fun RegisterScreen(modifier: Modifier, onLogin: () -> Unit) {
         BoldOrangeText("Gender")
         Column {
             CenterRow(Arrangement.Start) {
-                RadioButton(isMale, onClick = {isMale = true})
+                RadioButton(isMale, onClick = { isMale = true })
                 Text("Male")
             }
             CenterRow(Arrangement.Start) {
-                RadioButton(!isMale, onClick = {isMale = false})
+                RadioButton(!isMale, onClick = { isMale = false })
                 Text("Female")
             }
         }
         Button(
-            onClick = onLogin,
+            onClick = {
+                scope.launch {
+                    loading = true
+                    delay(1000)
+                    loading = false
+                    controller.navigate(Screen.Login.route)
+                }
+            },
+            enabled = !loading,
             shape = RoundedCornerShape(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
+            if (loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    color = Color.White
+                )
+                Spacer(Modifier.width(8.dp))
+            }
             Text("Sign Up", fontWeight = FontWeight.Bold)
         }
         CenterRow {
             Text("Have an Account?", fontWeight = FontWeight.Bold, color = Color.Gray)
-            TextButton(onClick = onLogin, modifier = Modifier.padding()) {
+            TextButton(
+                onClick = { controller.navigate(Screen.Login.route) },
+                modifier = Modifier.padding()
+            ) {
                 Text("Sign In", fontWeight = FontWeight.Bold)
             }
         }
@@ -162,20 +245,25 @@ fun HomeScreen(modifier: Modifier, onBack: () -> Unit) {
         onBack()
     }
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Home")
+        Text(
+            "Home",
+            fontSize = MaterialTheme.typography.titleLarge.fontSize,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
-@Composable
-fun CenterCol(function: @Composable () -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        function()
-    }
-}
 
 @Composable
-fun CenterRow(arrangement: Arrangement.Horizontal = Arrangement.Center, function: @Composable () -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = arrangement) {
+fun CenterRow(
+    arrangement: Arrangement.Horizontal = Arrangement.Center,
+    function: @Composable () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = arrangement
+    ) {
         function()
     }
 }
@@ -185,7 +273,7 @@ fun PasswordField(state: TextFieldState) {
     var showPassword by remember { mutableStateOf(false) }
     BasicSecureTextField(
         state = state,
-        textObfuscationMode = if(showPassword) {
+        textObfuscationMode = if (showPassword) {
             TextObfuscationMode.Visible
         } else {
             TextObfuscationMode.RevealLastTyped
@@ -196,13 +284,14 @@ fun PasswordField(state: TextFieldState) {
         decorator = { innerTextField ->
             Box(Modifier.fillMaxWidth()) {
                 Box(
-                    modifier = Modifier.align(Alignment.CenterStart)
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
                         .padding(start = 8.dp, end = 8.dp)
                 ) {
                     innerTextField()
                 }
                 Icon(
-                    if(showPassword) {
+                    if (showPassword) {
                         painterResource(R.drawable.baseline_visibility_24)
                     } else {
                         painterResource(R.drawable.outline_visibility_off_24)
@@ -210,8 +299,9 @@ fun PasswordField(state: TextFieldState) {
                     contentDescription = "Toggle Password Visibility",
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
-                        .requiredSize(36.dp).padding(8.dp)
-                        .clickable(enabled = true, onClick = {showPassword = !showPassword})
+                        .requiredSize(36.dp)
+                        .padding(8.dp)
+                        .clickable(enabled = true, onClick = { showPassword = !showPassword })
                 )
             }
         }
@@ -234,15 +324,3 @@ fun Modifier.borderBottom(color: Color = Color.LightGray, strokeWidth: Dp = 2.dp
         )
     }
 
-@Composable
-fun resetTextField(): TextFieldColors {
-    return TextFieldDefaults.colors(
-        focusedIndicatorColor = Color.Transparent,
-        unfocusedIndicatorColor = Color.Transparent,
-        disabledTextColor = Color.Transparent,
-        errorIndicatorColor = Color.Transparent,
-        focusedContainerColor = Color.Transparent,
-        unfocusedContainerColor = Color.Transparent,
-        disabledContainerColor = Color.Transparent,
-    )
-}
